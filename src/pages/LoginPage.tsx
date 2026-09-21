@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { supabase } from '../lib/supabaseClient';
 import { useNavigate, Link } from 'react-router-dom';
 import { Sparkles, ArrowRight, Shield, Lock, Mail, AlertTriangle, Play, CheckCircle } from 'lucide-react';
 import { DisclaimerBanner } from '../components/common/DisclaimerBanner';
@@ -7,20 +8,29 @@ import { useHealthRecord } from '../context/HealthRecordContext';
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const { showToast } = useHealthRecord();
-  const [email, setEmail] = useState('alex.morgan@example.com');
-  const [password, setPassword] = useState('••••••••••••');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleSignIn = (e: React.FormEvent) => {
+  const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      showToast('success', 'Authenticated', 'Welcome back, Alex Morgan (MRN: ML-2026-8942)');
-      navigate('/dashboard');
-    }, 600);
-  };
 
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    setLoading(false);
+
+    if (error) {
+      showToast('error', 'Login failed', error.message);
+      return;
+    }
+
+    showToast('success', 'Authenticated', 'Welcome back!');
+    navigate('/dashboard');
+  };
   const handleDemoAccess = () => {
     showToast('info', 'Demo Patient Loaded', 'Session initiated for demo patient Alex Morgan');
     navigate('/dashboard');
